@@ -1,0 +1,57 @@
+/**:
+  ros__parameters:
+    feature_extract_enable: false
+    point_filter_num: 3
+    max_iteration: 3
+    filter_size_surf: 0.5
+    filter_size_map: 0.5
+    cube_side_length: 1000.0
+    runtime_pos_log_enable: false
+    map_file_path: "/workspace/nav_ws/fast-lio-mid360/output/current_map.pcd"
+
+    common:
+      # Unitree host mid360_driver topics.
+      lid_topic: "/unitree/slam_lidar/points"
+      imu_topic: "/unitree/slam_lidar/imu"
+      time_sync_en: false
+      time_offset_lidar_to_imu: 0.0
+
+    preprocess:
+      # /unitree/slam_lidar/points is PointCloud2 with x/y/z/intensity/ring/time.
+      lidar_type: 2
+      scan_line: 4
+      blind: 0.3
+      timestamp_unit: 3
+      scan_rate: 20
+
+    mapping:
+      acc_cov: 50000.0
+      gyr_cov: 1000.0
+      b_acc_cov: 0.0001
+      b_gyr_cov: 0.0001
+      fov_degree: 360.0
+      det_range: 10.0
+      extrinsic_est_en: false
+      # FAST-LIO uses this as LiDAR -> IMU/body extrinsic
+      # (point_imu = R * point_lidar + T). This must match the config used
+      # when the PCD map was built. The Go2 factory pl_relocation config uses
+      # [0.1870, 0.0, 0.0803], while the factory pl_mapping config on this
+      # robot currently shows the MID360 internal LiDAR/IMU offset
+      # [-0.011, -0.02329, 0.04412]. Do not change this for an existing map
+      # unless you rebuild that map with the same value.
+      extrinsic_T: [0.1870, 0.0, 0.0803]
+      extrinsic_R: [1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 0.0, 1.0]
+
+    publish:
+      path_en: true
+      effect_map_en: false
+      map_en: true
+      scan_publish_en: true
+      dense_publish_en: false
+      scan_bodyframe_pub_en: true
+
+    pcd_save:
+      pcd_save_en: true
+      interval: -1

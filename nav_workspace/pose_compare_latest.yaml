@@ -1,0 +1,34 @@
+recorded_at: "2026-05-19 17:40:00"
+map:
+  open3d_container_path: "/workspace/nav_ws/maps/company_001_level_pro.pcd"
+  unitree_host_path: "/home/unitree/maps/company_001_level_pro.pcd"
+robot_state: "assumed stationary during sequential Open3D then Unitree checks"
+open3d:
+  status: "valid_stable_pose_received"
+  tf_checked:
+    frame: "base_link -> imu_link"
+    translation: [0.187, 0.0, 0.080]
+    quaternion_xyzw: [0.0, 0.0, 0.0, 1.0]
+  initialpose: [1.0, 27.0, 0.0, 0.0, 0.0, 0.0]
+  samples:
+    - [0.672532, 25.287447, 0.379375, 0.000140, 0.089506, 0.059617, 0.994200]
+    - [0.676971, 25.286147, 0.369360, 0.000302, 0.085837, 0.061759, 0.994393]
+    - [0.640803, 25.265155, 0.362924, -0.001806, 0.089547, 0.057243, 0.994335]
+  average_pose: [0.663435, 25.279583, 0.370553, -0.000455, 0.088297, 0.059540, 0.994309]
+  position_span:
+    dx: 0.0362
+    dy: 0.0223
+    dz: 0.0165
+unitree_original:
+  status: "failed_no_valid_slam_info_pose"
+  keydemo_status_code: 1
+  error_code: 509
+  error_info: "The current location matching degree is low (ICP)."
+  icp_scores:
+    - 0.158903
+    - 0.153319
+  samples: []
+comparison:
+  status: "not_computable"
+  reason: "Unitree original relocation did not publish a valid /slam_info currentPose."
+  next_step: "Rerun comparison after Unitree original relocation succeeds, or use Open3D pose with corrected TF as the navigation pose source."

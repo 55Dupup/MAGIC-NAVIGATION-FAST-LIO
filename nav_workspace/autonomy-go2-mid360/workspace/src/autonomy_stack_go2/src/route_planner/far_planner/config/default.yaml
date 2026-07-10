@@ -1,0 +1,101 @@
+far_planner:
+  ros__parameters:
+    # Dynamic Planner Default Params
+    # FAR 主循环和规划循环频率，单位 Hz。
+    main_run_freq: 5.0
+    # FAR 内部点云体素滤波分辨率，影响障碍、自由空间和图节点精度。
+    voxel_dim: 0.1  # Unit: meter
+    # 机器人平面安全直径/宽度近似值，用于通行距离和节点间隔判断。
+    robot_dim: 0.6   # Unit: meter
+    # 机器人高度，用于地形高度、可通行高度和障碍判断。
+    vehicle_height: 0.5  # Unit: meter
+    # 传感器最大有效感知半径，超过该范围的点不参与 FAR 局部规划。
+    sensor_range: 10.0  # Unit: meter
+    # FAR 使用的局部地形处理半径，通常不应大于 sensor_range。
+    terrain_range: 7.5   # Unit: meter
+    # 局部路径规划半径，用于近场 waypoint 和 terrain planner。
+    local_planner_range: 2.5   # Unit: meter
+    # RViz/Foxglove 可视化缩放比例，只影响 marker 大小，不影响规划。
+    visualize_ratio: 0.4
+    # 是否扩展 viewpoint，以便在局部边界外生成更远的候选点。
+    is_viewpoint_extend: false
+    # 是否启用多层环境处理，例如多楼层/高差较大的场景。
+    is_multi_layer: false
+    # 是否打开 OpenCV 图像窗口显示障碍图，调试用。
+    is_opencv_visual: false # Obstacle Image Display
+    # 静态环境模式；true 会关闭 scan 动态障碍处理，false 允许动态障碍检测和清除。
+    is_static_env: false
+    # 是否发布导航边界 polygon。
+    is_pub_boundary: false  
+    # 是否输出详细调试日志。
+    is_debug_output: false
+    # 是否允许 planner 自动切换到 attemptable navigation 策略。
+    is_attempt_autoswitch: false  # Auto switch to attemptable navigation
+    # FAR 输出和内部全局 graph 使用的坐标系。
+    world_frame: map
+
+    # Graph Messager
+    # 当前机器人 graph id；注释中的 robot_id=0 通常表示从文件解码/加载的 graph。
+    graph_msger/robot_id: 1  # graph from robot id "0" is extracted from files
+
+    # Map Handler Params
+    # 单层地面高度范围，用于过滤和关联地形高度。
+    map_handler/floor_height: 2.0    # Unit: meter
+    # MapHandler 栅格单元边长，影响 obstacle/free cloud 的空间索引粒度。
+    map_handler/cell_length: 2.5    # Unit: meter
+    # MapHandler 栅格地图最大平面范围。
+    map_handler/map_grid_max_length: 200.0  # Unit: meter
+    # MapHandler 栅格地图最大高度范围。
+    map_handler/map_grad_max_height: 10.0   # Unit: meter
+
+    # Dynamic Planner Utility Params
+    # 节点表面方向允许的角度噪声，单位度，越大越宽松。
+    util/angle_noise: 16.0  # Unit: degree
+    # 判断两个方向可对齐/可连接的最大角度阈值，单位度。
+    util/accept_max_align_angle: 4.0   # Unit: degree
+    # 障碍体素膨胀层数，越大越保守。
+    util/obs_inflate_size: 1
+    # 新障碍点检测的强度阈值，用于从当前障碍和已有障碍差异中提取新点。
+    util/new_intensity_thred: 2.0
+    # terrain 点按 intensity 分成 free/obs 的阈值；低于该值视作自由/地面。
+    util/terrain_free_Z: 0.15
+    # 动态障碍点数量超过该阈值时，才执行动态障碍清除。
+    util/dyosb_update_thred: 2 #默认是4
+    # 新点累计/投票相关阈值，用于抑制瞬时噪声。
+    util/new_point_counter: 3
+    # 动态障碍历史点保留时间，超过后从 stack_dyobs_cloud 中移除。
+    util/dynamic_obs_dacay_time: 1.0  # Unit: second
+    # 新障碍点历史保留时间，影响 FAR 对新出现障碍/节点的短时记忆。
+    util/new_points_decay_time: 1.0   # Unit: second
+
+    # Dynamic Graph Params
+    # 边连接投票窗口大小，越大越稳定但响应越慢。
+    graph/connect_votes_size: 5        
+    # 清除疑似误检 graph 节点所需的连续失败计数阈值。
+    graph/clear_dumper_thred: 3
+    # graph 节点/边稳定成 finalized 状态所需的投票阈值。
+    graph/node_finalize_thred: 5
+    # 节点位置和方向滤波队列长度。
+    graph/filter_pool_size: 6
+
+    # Corner Detector Params
+    # 障碍图像生成和轮廓检测的缩放比例。
+    c_detector/resize_ratio: 3.0
+    # 轮廓滤波计数阈值，用于去除小噪声轮廓。
+    c_detector/filter_count_value: 4
+    # 是否保存轮廓检测的中间图像。
+    c_detector/is_save_img: false
+    # 保存轮廓检测图像的目录。
+    c_detector/img_folder_path: /path
+
+    # Graph Planner Params
+    # 认为到达局部/全局目标的收敛距离。
+    g_planner/converge_distance: 0.25  # Unit: meter
+    # 目标点落在障碍或不可达区域时，允许搜索附近可行目标的半径。
+    g_planner/goal_adjust_radius: 1.0  # Unit: meter
+    # 判断 free path/节点可通行的投票阈值。
+    g_planner/free_counter_thred: 7
+    # 到达目标状态需要连续满足的投票次数。
+    g_planner/reach_goal_vote_size: 3
+    # 路径动量阈值，用于减少路径频繁跳变。
+    g_planner/path_momentum_thred: 3

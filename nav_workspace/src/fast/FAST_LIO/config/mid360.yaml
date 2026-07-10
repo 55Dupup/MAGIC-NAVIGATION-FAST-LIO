@@ -1,0 +1,59 @@
+/**:
+  ros__parameters:
+    feature_extract_enable: false
+    point_filter_num: 3
+    max_iteration: 3
+    filter_size_surf: 0.5
+    filter_size_map: 0.5
+    cube_side_length: 1000.0
+    runtime_pos_log_enable: false
+    map_file_path: "/workspace/nav_ws/maps/test.pcd"
+
+    common:
+      # lid_topic:  "/livox/lidar"
+      lid_topic: "/unitree/slam_lidar/points" # "/livox/custom_msg"
+      imu_topic: "/unitree/slam_lidar/imu" # "/livox/imu"
+      # imu_topic: "/utlidar/imu" # "/livox/imu"
+      time_sync_en: false # ONLY turn on when external time synchronization is really not possible
+      time_offset_lidar_to_imu:
+        0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
+        # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
+
+    preprocess:
+      # /unitree/slam_lidar/points is PointCloud2 with x/y/z/intensity/ring/time.
+      # Use the Velodyne-style handler so FAST-LIO uses ring and per-point time.
+      lidar_type: 2 # 1 Livox CustomMsg, 2 PointCloud2 x/y/z/intensity/ring/time, 3 Ouster, 4 Livox x/y/z/intensity/tag/line
+      scan_line: 4
+      blind: 0.3 # 机器狗高度，长度
+      timestamp_unit: 3 # Unitree point field 'time' is in ns.
+      scan_rate: 20
+
+    mapping:
+      acc_cov: 50000.0 # 0.1
+      gyr_cov: 1000.0 # 0.1
+      b_acc_cov: 0.0001
+      b_gyr_cov: 0.0001
+      fov_degree: 360.0
+      det_range: 10.0
+      extrinsic_est_en: false # false: use fixed extrinsic calibration (宇树官方标定)
+      # Mid-360在Go2机身内部IMU坐标系下: 平移(0.1870, 0, 0.0803)，绕Y轴旋转13°
+      extrinsic_T: [0.1870, 0.0, 0.0803]
+      # 旋转矩阵 R_y(13°) = [cos13°, 0, -sin13°; 0, 1, 0; sin13°, 0, cos13°]
+      # extrinsic_R: [0.97437, 0.0, 0.22495, 0.0, 1.0, 0.0, -0.22495, 0.0, 0.97437]
+      # extrinsic_T: [0.0, 0.0, 0.0]
+      # 使用雷达本体的imu与点云，不需要旋转
+      extrinsic_R: [1., 0., 0., 0., 1., 0., 0., 0., 1.]
+    
+    publish:
+      path_en: true # true: publish Path
+      effect_map_en: false # true: publish Effects
+      map_en: true # true: publish Map cloud
+      scan_publish_en: true # false: close all the point cloud output
+      dense_publish_en: false # false: low down the points number in a global-frame point clouds scan.
+      scan_bodyframe_pub_en: true # true: output the point cloud scans in IMU-body-frame
+
+    pcd_save:
+      pcd_save_en: true
+      interval:
+        -1 # how many LiDAR frames saved in each pcd file;
+        # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.

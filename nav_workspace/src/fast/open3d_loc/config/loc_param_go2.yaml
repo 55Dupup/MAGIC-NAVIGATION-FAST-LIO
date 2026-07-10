@@ -1,0 +1,108 @@
+/global_loc_node:
+  ros__parameters:
+    # ============================================================
+    # Open3D localization for Unitree Go2 + MID360
+    # ============================================================
+    # 参考来源：
+    # - 宇树原厂重定位配置：
+    #   /unitree/module/unitree_slam/config/pl_relocation/mid360.yaml -> Go2 段
+    # - 宇树原厂建图配置：
+    #   /unitree/module/unitree_slam/config/pl_mapping/mid360.yaml -> Go2 段
+    #
+    # 注意：
+    # 1. Open3D localization 不是宇树 pl_relocation，不能读取所有宇树参数。
+    # 2. 本文件只写 Open3D 节点实际 declare/get 的参数。
+    # 3. 原厂 Go2 参数中不能直接生效的项，以注释形式保留在文件末尾，方便对照。
+    # 4. Go2 MID360 外参不在本 YAML 中生效，而是在 open3d_step1_start_fastlio_open3d_loc.sh
+    #    通过静态 TF base_link -> imu_link 发布：
+    #    [x, y, z, qx, qy, qz, qw] = [0.1870, 0.0, 0.0803, 0.0, 0.0, 0.0, 1.0]。
+    # ============================================================
+
+    # 初始 map->odom 位姿，格式为：
+    # [x, y, z, roll, pitch, yaw]
+    # 单位：xyz 为米，rpy 为角度 degree。
+    # 注意：Open3D 源码把 /initialpose 也直接写入 map->odom。
+    # RViz 的 2D Pose Estimate 是机器人在 map 中的位姿，不能直接喂给本节点；
+    # 当前导航 launch 会通过 global_nav_frame_bridge 先换算成 map->odom。
+    initialpose: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+    # 点云队列长度。Open3D 会把多帧 /cloud_registered_1 累积成当前局部扫描。
+    # 宇树 Go2 原厂重定位 filter_num=35，表示会使用较多历史点云增强匹配。
+    # Open3D 这里不宜直接设到 35，否则延迟和残影会变大；10 是 Go2 室内/工业场景较稳的折中值。
+    pcd_queue_maxsize: 10
+
+    # 定位周期，单位秒。2.0 表示约 0.5Hz。
+    # 增大可降低 CPU 占用；减小可更及时，但会增加误匹配和负载。
+    loc_frequence: 2.0
+
+    # 地图粗/精下采样分辨率，单位米。
+    # 宇树 Go2 原厂重定位：scan_resolution=0.3，map_resolution=0.3。
+    # 保持 0.3 以降低 PCD 加载、/map 发布和持续 ICP 的负载。
+    # 如果临时需要更密的可视化/匹配，可单独降到 0.2 后重新建图并重启重定位。
+    voxelsize_coarse: 0.3
+    voxelsize_fine: 0.3
+
+    # 初始化和持续定位的 fitness 阈值。
+    # Open3D fitness 越大越好；宇树 icp_score 越小越好，二者不是同一量纲，不能直接等同。
+    # 使用 0.55 是为了先排除明显错误匹配；如果现场重复结构很多，可提高到 0.65~0.75。
+    threshold_fitness_init: 0.55
+    threshold_fitness: 0.55
+
+    # 发布给外部的置信度参考阈值。当前源码主要发布 confidence，实际更新仍看 threshold_fitness。
+    confidence_loc_th: 0.55
+
+    # 单次配准参与的最大点数。
+    # 宇树 Go2 原厂重定位会做滤波和局部地图裁剪；Open3D 这里控制随机降采样上限。
+    # 工业空旷/重复结构场景建议不要太低，否则特征更少；也不要过高，否则 CPU 压力过大。
+    maxpoints_source: 80000
+    maxpoints_target: 400000
+
+    # 子地图更新距离，单位米。
+    # 宇树 Go2 原厂 det_range=10.0；Open3D 源码固定裁剪 60x60x40m 的 OBB，
+    # 这里的 dis_updatemap 只控制移动多远后重新裁剪局部地图。
+    dis_updatemap: 1.0
+
+    # 是否保存调试点云。默认关闭，避免写入源码里硬编码的调试路径。
+    save_scan: false
+
+    # 是否对 odom->map 的 z 做二次 Kalman 滤波。
+    # 当前优先保持 false，只对发布的 baselink/motionlink z 做平滑。
+    filter_odom2map: false
+    kalman_processVar2: 0.02
+    kalman_estimatedMeasVar2: 0.04
+
+    # Kalman 平滑参数。
+    # 必须使用带斜杠的完整参数名；写成嵌套 kf_baselink2map: {x: ...} 时，
+    # 当前 ROS2 节点不会按预期读到，运行时会变成 [0, 0]。
+    # 每组格式：[过程噪声, 观测噪声]。x/y 保持厘米级响应，z 稍强平滑。
+    "kf_baselink2map/x": [0.001, 0.002]
+    "kf_baselink2map/y": [0.001, 0.005]
+    "kf_baselink2map/z": [0.00001, 0.04]
+
+    # 地图文件由启动脚本通过 -p path_map:=... 覆盖。
+    # 这里保留空值，避免误把默认地图当成真实地图。
+    path_map: ""
+
+    # ============================================================
+    # 以下是宇树 Go2 原厂配置中的关键参考值；Open3D 节点不会读取这些键。
+    # 保留在注释里，方便排查“和原厂配置是否一致”。
+    # ============================================================
+    # unitree_go2_reference:
+    #   lidar_topic: "rt/unitree/slam_lidar/points"
+    #   imu_topic: "rt/unitree/slam_lidar/imu"
+    #   body_frame: "livox_frame"
+    #   filter_num: 35
+    #   lidar_scan_min_range: 0.25
+    #   lidar_scan_max_range: 20.0
+    #   scan_resolution: 0.3
+    #   map_resolution: 0.3
+    #   det_range: 10.0
+    #   pose_imu_lidar: [1.0, 0.0, 0.0, 0.0, 0.1870, 0.0, 0.0803]
+    #   icp_score: 0.03
+    #   plane_threshold: 0.1
+    #   dist_sq_threshold: 0.1
+    #   init_local_map_res: 0.15
+    #   re_position_tollerance: 0.1
+    #   re_angle_tollerance: 0.2
+    #   re_score_tollerance: 0.02
+    #   ground_ang: 60.0

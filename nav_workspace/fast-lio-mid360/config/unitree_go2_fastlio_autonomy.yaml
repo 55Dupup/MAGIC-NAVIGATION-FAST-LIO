@@ -1,0 +1,78 @@
+/**:
+  ros__parameters:
+    feature_extract_enable: false
+    # Local obstacle input density reference:
+    # - Original autonomy_stack_go2 Point-LIO/L1 launch:
+    #   point_filter_num=1, space_down_sample=true,
+    #   filter_size_surf=0.1, filter_size_map=0.1.
+    #   It publishes /cloud_registered and remaps it to /registered_scan.
+    # - 2026-07-01 stable MID360 FAST-LIO backup values:
+    #   point_filter_num=2, filter_size_surf=0.5, filter_size_map=0.5.
+    # - 2026-07-06 planner density test:
+    #   point_filter_num=1, filter_size_surf=0.5, filter_size_map=0.5.
+    #
+    # Do not directly copy Point-LIO's 0.1m map voxel into MID360 FAST-LIO
+    # mapping. On this frontend it can overload scan matching and make the map
+    # diverge. If denser local obstacle input is needed, test scan density
+    # separately from map density first.
+    point_filter_num: 1
+    max_iteration: 3
+    filter_size_surf: 0.5
+    filter_size_map: 0.5
+    cube_side_length: 1000.0
+    runtime_pos_log_enable: false
+    map_file_path: "/workspace/autonomy-go2-mid360/fast-lio-runtime/output/autonomy_current_map.pcd"
+
+    common:
+      # Unitree host mid360_driver topics.
+      lid_topic: "/unitree/slam_lidar/points"
+      imu_topic: "/unitree/slam_lidar/imu"
+      time_sync_en: false
+      time_offset_lidar_to_imu: 0.0
+
+    preprocess:
+      # /unitree/slam_lidar/points is PointCloud2 with x/y/z/intensity/ring/time.
+      lidar_type: 2
+      scan_line: 4
+      blind: 0.3
+      timestamp_unit: 3
+      scan_rate: 20
+
+    mapping:
+      acc_cov: 50000.0
+      gyr_cov: 1000.0
+      b_acc_cov: 0.0001
+      b_gyr_cov: 0.0001
+      fov_degree: 360.0
+      det_range: 10.0
+      extrinsic_est_en: false
+      # Dedicated FAST-LIO config for autonomy_stack_go2 integration.
+      #
+      # Do not use this with maps built by unitree_go2_fastlio.yaml unless the
+      # map is rebuilt with this same extrinsic. FAST-LIO uses this as
+      # LiDAR -> IMU/body: point_imu = R * point_lidar + T.
+      #
+      # The pitch value starts from Unitree's original local gridmap setting:
+      # /unitree/module/unitree_slam/config/gridmap_config/config.yaml
+      #   T_Dog2lidar: [0.0, 0.0, 0.0, 0.0, 0.226, 0.0]
+      # 0.226 rad = 12.9488 deg. This is a candidate calibration value; verify
+      # /cloud_registered_1 ground tilt before using it for production maps.
+      extrinsic_T: [0.1870, 0.0, 0.0803]
+      extrinsic_R: [0.97457051, 0.0, 0.22408104,
+                    0.0, 1.0, 0.0,
+                    -0.22408104, 0.0, 0.97457051]
+
+    publish:
+      path_en: true
+      effect_map_en: false
+      map_en: true
+      scan_publish_en: true
+      # Keep /cloud_registered_1 filtered so Open3D relocalization remains stable.
+      # Setting this to true publishes the dense undistorted scan and can overload
+      # relocalization; use a separate local-scan path if denser obstacle input is needed.
+      dense_publish_en: false
+      scan_bodyframe_pub_en: true
+
+    pcd_save:
+      pcd_save_en: true
+      interval: -1

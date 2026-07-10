@@ -1,0 +1,43 @@
+# Large local artifacts
+*.tar
+*.tar.*
+*.bag
+*.pcd
+*.zip
+
+# Build/runtime outputs
+build/
+install/
+log/
+logs/
+output/
+**/build/
+**/install/
+**/log/
+**/logs/
+**/output/
+__pycache__/
+*.pyc
+**/.git/
+
+# Large upstream/demo media that is not required to rebuild or run
+*.mp4
+*.gif
+*.pdf
+*.ply
+
+# Local backups and accidental shell artifacts
+go2-fast-lio-backup/
+.git.vendor-backup*/
+**/.git.vendor-backup*/
+--name
+--output-dir
+
+# ROS/runtime scratch data
+nav_workspace/localization_3d_data/
+nav_workspace/fast-lio-mid360/output/
+nav_workspace/fast-lio-mid360/logs/
+nav_workspace/autonomy-go2-mid360/fast-lio-runtime/
+nav_workspace/autonomy-go2-mid360/workspace/build/
+nav_workspace/autonomy-go2-mid360/workspace/install/
+nav_workspace/autonomy-go2-mid360/workspace/log/

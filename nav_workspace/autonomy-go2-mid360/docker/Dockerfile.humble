@@ -1,0 +1,46 @@
+ARG BASE_IMAGE=ros:humble-ros-base
+FROM ${BASE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+ARG INSTALL_APT_DEPS=1
+ARG INSTALL_PIP_DEPS=1
+
+RUN if [ "${INSTALL_APT_DEPS}" = "1" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends \
+      bash-completion \
+	      build-essential \
+	      cmake \
+	      git \
+	      liblapacke-dev \
+	      libopencv-dev \
+	      libusb-dev \
+	      libyaml-cpp-dev \
+	      python3-colcon-common-extensions \
+	      python3-pip \
+	      python3-rosdep \
+	      python3-vcstool \
+	      ros-humble-cv-bridge \
+	      ros-humble-foxglove-bridge \
+	      ros-humble-image-transport \
+	      ros-humble-joy \
+	      ros-humble-perception-pcl \
+	      ros-humble-rmw-cyclonedds-cpp \
+	      ros-humble-rosidl-generator-dds-idl \
+	      ros-humble-rviz2 \
+	      ros-humble-sensor-msgs-py \
+	      ros-humble-tf2-eigen \
+	      ros-humble-tf2-ros \
+	      ros-humble-tf2-sensor-msgs \
+	      ros-humble-tf-transformations \
+	      tmux \
+      && rm -rf /var/lib/apt/lists/*; \
+    fi
+
+RUN if [ "${INSTALL_PIP_DEPS}" = "1" ]; then \
+      pip3 install --no-cache-dir transforms3d pyyaml; \
+    fi
+
+SHELL ["/bin/bash", "-lc"]
+
+WORKDIR /workspace/autonomy-go2-mid360

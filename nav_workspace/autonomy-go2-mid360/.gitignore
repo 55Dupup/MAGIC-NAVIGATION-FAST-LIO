@@ -1,0 +1,6 @@
+**/__pycache__/
+*.pyc
+workspace/build/
+workspace/install/
+workspace/log/
+workspace/src/autonomy_stack_go2/
